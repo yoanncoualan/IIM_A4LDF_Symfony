@@ -13,6 +13,7 @@ parameters:
     app.max_file_size: 5242880  # 5 Mo en octets
     env.test: '%env(TEST)%'
     app.tva_rate: 0.20
+    app.meteo_cache_ttl: 1800
 
 services:
     # default configuration for services in *this* file
@@ -29,6 +30,11 @@ services:
         decorates: App\Service\ProduitService
         arguments:
             $inner: '@.inner'  # Référence au service décoré original
+
+    App\Service\CachedMeteoService:
+        decorates: App\Service\MeteoService
+        arguments:
+            $inner: '@.inner'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
