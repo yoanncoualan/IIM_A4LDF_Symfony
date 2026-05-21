@@ -4,6 +4,8 @@ namespace App\Controller;
 
 use App\Entity\Commande;
 use App\Form\CommandeType;
+use App\Message\GenerateFactureMessage;
+use App\Message\SendEmailMessage;
 use App\Repository\CommandeRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -11,14 +13,25 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Messenger\MessageBusInterface;
 
 #[Route('/commande')]
 #[IsGranted("ROLE_USER")]
 final class CommandeController extends AbstractController
 {
     #[Route(name: 'app_commande_index', methods: ['GET'])]
-    public function index(CommandeRepository $commandeRepository): Response
+    public function index(CommandeRepository $commandeRepository, MessageBusInterface $bus): Response
     {
+        $commande = $commandeRepository->findOneById(2);
+
+        $bus->dispatch(new GenerateFactureMessage($commande->getId()));
+        $bus->dispatch(new SendEmailMessage(
+            destinataire: $commande->getClient()->getEmail(),
+            sujet:        'Commande confirmée !',
+            contenuHtml:  $this->renderView('commande/index.html.twig', ['commandes' => $commandeRepository->findAll()]),
+        ));
+
+
         return $this->render('commande/index.html.twig', [
             'commandes' => $commandeRepository->findAll(),
         ]);
