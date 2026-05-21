@@ -70,8 +70,11 @@ class CreerAdminCommand extends Command
         $client->setEmail($email)
             ->setPrenom($prenom)
             ->setNom($nom)
-            ->setRoles([$role])
-            ->setPassword($this->passwordHasher->hashPassword($client, $pwd));
+            ->setRoles([$role]);
+
+        $pwdHashed = $this->passwordHasher->hashPassword($client, $pwd);
+
+        $client->setPassword($pwdHashed);
 
         $this->em->persist($client);
         $this->em->flush();
